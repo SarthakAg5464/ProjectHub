@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js build outputs
+.next/
+out/
+
+# Environment variables (Crucial for protecting your Supabase keys!)
+.env
+.env.local
+.env.production
+.env.development
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
