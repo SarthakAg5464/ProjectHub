@@ -5,25 +5,26 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { Code, Clock, Users as UsersIcon, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '../../components/AuthProvider';
 
 export default function Dashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [myProjects, setMyProjects] = useState<any[]>([]);
   const [myApplications, setMyApplications] = useState<any[]>([]);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     async function loadDashboard() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
+      if (!user) {
+        if (!authLoading) router.push('/login');
         return;
       }
 
       const { data: projectsData } = await supabase
         .from('projects')
         .select('*, applications ( status )')
-        .eq('founder_id', session.user.id)
+        .eq('founder_id', user.id)
         .order('created_at', { ascending: false });
 
       if (projectsData) {
@@ -40,7 +41,7 @@ export default function Dashboard() {
           id, status, created_at,
           projects ( id, title, type )
         `)
-        .eq('applicant_id', session.user.id)
+        .eq('applicant_id', user.id)
         .order('created_at', { ascending: false });
 
       if (appsData) setMyApplications(appsData);
@@ -48,8 +49,10 @@ export default function Dashboard() {
       setLoading(false);
     }
     
-    loadDashboard();
-  }, [router]);
+    if (!authLoading) {
+      loadDashboard();
+    }
+  }, [router, user, authLoading]);
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '100px', color: 'var(--text-secondary)' }}>Loading Dashboard...</div>;

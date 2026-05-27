@@ -4,25 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Code, Rocket, Users as UsersIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProjectCard from '../components/ProjectCard';
+import { useAuth } from '../components/AuthProvider';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [projects, setProjects] = useState<any[]>([]);
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
 
   const filters = ["All", "Web App", "Mobile App", "AI/ML", "Hardware/IoT"];
 
   useEffect(() => {
     async function fetchProjects() {
-      const { data: { session } } = await supabase.auth.getSession();
       let userSkills: string[] = [];
 
-      if (session) {
+      if (user) {
         const { data: uSkills } = await supabase
           .from('user_skills')
           .select('skill_name')
-          .eq('user_id', session.user.id);
+          .eq('user_id', user.id);
         if (uSkills) {
           userSkills = uSkills.map((s: any) => s.skill_name.toLowerCase());
         }
@@ -66,7 +67,7 @@ export default function Home() {
           };
         });
 
-        if (session && userSkills.length > 0) {
+        if (user && userSkills.length > 0) {
           formattedProjects.sort((a, b) => b.matchScore - a.matchScore);
         }
 
@@ -74,8 +75,11 @@ export default function Home() {
       }
       setLoading(false);
     }
-    fetchProjects();
-  }, []);
+    
+    if (!authLoading) {
+      fetchProjects();
+    }
+  }, [user, authLoading]);
 
   const filteredProjects = projects.filter(project => {
     const searchLower = searchQuery.toLowerCase();
@@ -147,6 +151,7 @@ export default function Home() {
               type="text" 
               placeholder="Search by project name or skills..." 
               className="search-input"
+              style={{ paddingLeft: '48px' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

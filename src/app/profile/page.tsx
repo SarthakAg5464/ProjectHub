@@ -5,31 +5,35 @@ import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '../../components/AuthProvider';
 
 export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     async function loadProfile() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
+      if (!user) {
+        if (!authLoading) router.push('/login');
         return;
       }
 
       const { data } = await supabase
         .from('users')
         .select('*, user_skills(skill_name)')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
         
       if (data) setProfile(data);
       setLoading(false);
     }
-    loadProfile();
-  }, [router]);
+    
+    if (!authLoading) {
+      loadProfile();
+    }
+  }, [router, user, authLoading]);
 
   const toggleCollaboration = async () => {
     const newState = !profile.open_to_collaborate;

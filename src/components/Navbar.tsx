@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthProvider';
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
@@ -14,22 +15,19 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    async function checkUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user && pathname !== '/onboarding') {
+    async function fetchPendingCount() {
+      if (user && pathname !== '/onboarding') {
         const { data: profile } = await supabase
           .from('users')
           .select('university')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single();
           
         if (profile && !profile.university) {
           router.push('/onboarding');
         }
 
-        const { data: myProjects } = await supabase.from('projects').select('id').eq('founder_id', session.user.id);
+        const { data: myProjects } = await supabase.from('projects').select('id').eq('founder_id', user.id);
         if (myProjects && myProjects.length > 0) {
           const projectIds = myProjects.map(p => p.id);
           const { count } = await supabase
@@ -42,14 +40,8 @@ export default function Navbar() {
       }
     }
 
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      checkUser();
-    });
-
-    return () => subscription.unsubscribe();
-  }, [pathname, router]);
+    fetchPendingCount();
+  }, [user, pathname, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

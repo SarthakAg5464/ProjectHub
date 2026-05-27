@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "A campus-first platform where students post projects, find teammates based on skills, track progress together, and build a portfolio.",
 };
 
+import { AuthProvider } from "../components/AuthProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -15,10 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app-container">
-          <Navbar />
-          {children}
-        </div>
+        <AuthProvider>
+          <div className="app-container">
+            <Navbar />
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

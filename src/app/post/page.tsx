@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { PREDEFINED_SKILLS } from '../../lib/skills';
+import { useAuth } from '../../components/AuthProvider';
 
 export default function PostProject() {
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,15 @@ export default function PostProject() {
     stage: 'Idea Stage'
   });
 
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
   const toggleSkill = (skill: string) => {
     if (selectedSkills.includes(skill)) {
       setSelectedSkills(selectedSkills.filter(s => s !== skill));
@@ -26,20 +37,14 @@ export default function PostProject() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setLoading(true);
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      alert("You must be logged in to post a project.");
-      setLoading(false);
-      return;
-    }
 
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
-        founder_id: session.user.id,
+        founder_id: user.id,
         title: formData.title,
         type: formData.type,
         description: formData.description,
