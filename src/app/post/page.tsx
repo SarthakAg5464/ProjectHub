@@ -8,7 +8,8 @@ import { useAuth } from '../../components/AuthProvider';
 
 export default function PostProject() {
   const [loading, setLoading] = useState(false);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [githubUrl, setGithubUrl] = useState("");
+  const [skills, setSkills] = useState<Record<string, 'required' | 'nice'>>({});
   const [formData, setFormData] = useState({
     title: '',
     type: 'Web App',
@@ -28,11 +29,21 @@ export default function PostProject() {
   }, [user, authLoading, router]);
 
   const toggleSkill = (skill: string) => {
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter(s => s !== skill));
-    } else if (selectedSkills.length < 15) {
-      setSelectedSkills([...selectedSkills, skill]);
-    }
+    setSkills(prev => {
+      const current = prev[skill];
+      const newSkills = { ...prev };
+      
+      if (!current) {
+        if (Object.keys(newSkills).length < 15) {
+          newSkills[skill] = 'required';
+        }
+      } else if (current === 'required') {
+        newSkills[skill] = 'nice';
+      } else {
+        delete newSkills[skill];
+      }
+      return newSkills;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +62,7 @@ export default function PostProject() {
         commitment: formData.commitment,
         team_size: formData.teamSize,
         stage: formData.stage,
+        github_url: githubUrl.trim() === "" ? null : githubUrl.trim(),
         status: 'Open'
       })
       .select()
@@ -62,11 +74,12 @@ export default function PostProject() {
       return;
     }
 
-    if (selectedSkills.length > 0) {
-      const projectSkills = selectedSkills.map(skill => ({
+    const skillKeys = Object.keys(skills);
+    if (skillKeys.length > 0) {
+      const projectSkills = skillKeys.map(skill => ({
         project_id: project.id,
         skill_name: skill,
-        is_required: true
+        is_required: skills[skill] === 'required'
       }));
 
       await supabase.from('project_skills').insert(projectSkills);
@@ -127,6 +140,18 @@ export default function PostProject() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>GitHub Repository URL (Optional)</label>
+          <input 
+            type="url" 
+            placeholder="e.g. https://github.com/username/repo" 
+            className="search-input" 
+            style={{ padding: '12px 16px' }}
+            value={githubUrl}
+            onChange={(e) => setGithubUrl(e.target.value)}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label style={{ fontWeight: 500 }}>Description</label>
           <textarea 
             required 
@@ -138,14 +163,29 @@ export default function PostProject() {
         </div>
 
         <div>
-          <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontWeight: 500 }}>
-            <span>Skills Required</span>
-            <span style={{ color: selectedSkills.length === 15 ? '#F87171' : 'var(--text-secondary)' }}>{selectedSkills.length} / 15</span>
+          <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontWeight: 500 }}>
+            <span>Project Skills (Click to toggle: Required <span style={{color:'var(--text-secondary)'}}>→</span> Nice-to-Have <span style={{color:'var(--text-secondary)'}}>→</span> Remove)</span>
+            <span style={{ color: Object.keys(skills).length === 15 ? '#F87171' : 'var(--text-secondary)' }}>{Object.keys(skills).length} / 15</span>
           </label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
             {PREDEFINED_SKILLS.map(skill => {
-              const isSelected = selectedSkills.includes(skill);
-              const isDisabled = !isSelected && selectedSkills.length >= 15;
+              const state = skills[skill];
+              const isDisabled = !state && Object.keys(skills).length >= 15;
+              
+              let border = '1px solid var(--border-color)';
+              let bg = 'var(--bg-surface)';
+              let color = isDisabled ? 'var(--text-secondary)' : 'var(--text-primary)';
+              
+              if (state === 'required') {
+                border = '1px solid #818CF8';
+                bg = 'rgba(99, 102, 241, 0.15)';
+                color = '#818CF8';
+              } else if (state === 'nice') {
+                border = '1px dashed #A78BFA';
+                bg = 'rgba(167, 139, 250, 0.08)';
+                color = '#A78BFA';
+              }
+
               return (
                 <button
                   key={skill}
@@ -158,13 +198,13 @@ export default function PostProject() {
                     fontSize: '0.85rem',
                     fontWeight: 500,
                     cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    border: isSelected ? '1px solid #818CF8' : '1px solid var(--border-color)',
-                    background: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-surface)',
-                    color: isSelected ? '#818CF8' : (isDisabled ? 'var(--text-secondary)' : 'var(--text-primary)'),
+                    border,
+                    background: bg,
+                    color,
                     transition: 'all 0.2s'
                   }}
                 >
-                  {skill}
+                  {skill} {state === 'required' ? '(Required)' : state === 'nice' ? '(Nice)' : ''}
                 </button>
               )
             })}

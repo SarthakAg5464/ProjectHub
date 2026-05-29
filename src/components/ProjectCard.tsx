@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Clock, Users, ChevronRight } from 'lucide-react';
+import { Clock, Users, ChevronRight, Award } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProjectCard({ project, index }: { project: any, index: number }) {
@@ -10,15 +10,20 @@ export default function ProjectCard({ project, index }: { project: any, index: n
       className="project-card glass-panel animate-fade-in"
       style={{ animationDelay: `${(index * 0.1) + 0.3}s` }}
     >
-      <div className="card-header">
+      <div className="card-header flex-between align-start">
         <div>
-          <div className="project-type">{project.type}</div>
-          <h3 className="project-title">{project.title}</h3>
+          <div className="project-type mb-1">{project.type}</div>
+          <h3 className="project-title m-0">{project.title}</h3>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <div className="flex-col" style={{ alignItems: 'flex-end' }}>
           {project.matchScore > 0 && (
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#34D399', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '8px' }}>
-              {project.matchScore}% Match
+            <div className="text-sm text-bold mb-2" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#34D399', padding: '4px 8px', borderRadius: '8px', textAlign: 'right' }}>
+              {project.matchedSkills?.length} of {project.skillsRequired?.length} required skills
+            </div>
+          )}
+          {project.endorsementCount > 0 && (
+            <div className="flex-center gap-1 text-sm text-bold mb-2" style={{ background: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent-secondary)', padding: '4px 8px', borderRadius: '8px' }}>
+              <Award size={12} /> Endorsed
             </div>
           )}
           <img 
@@ -29,13 +34,25 @@ export default function ProjectCard({ project, index }: { project: any, index: n
         </div>
       </div>
       
-      <p className="project-desc">{project.description}</p>
+      <p className="project-desc mt-2">{project.description}</p>
       
       <div className="skills-list">
-        {project.skillsRequired.map((skill: string) => (
+        {project.skillsRequired?.map((skill: string) => (
           <span 
-            key={skill} 
+            key={`req-${skill}`} 
             className={`skill-badge ${project.matchedSkills?.includes(skill) ? 'match' : ''}`}
+            title="Required Skill"
+            style={{ border: '1px solid rgba(99, 102, 241, 0.3)' }}
+          >
+            {skill}
+          </span>
+        ))}
+        {project.skillsNice?.map((skill: string) => (
+          <span 
+            key={`nice-${skill}`} 
+            className="skill-badge"
+            title="Nice-to-Have Skill"
+            style={{ border: '1px dashed rgba(167, 139, 250, 0.3)', background: 'transparent', color: 'var(--text-secondary)' }}
           >
             {skill}
           </span>
@@ -43,19 +60,16 @@ export default function ProjectCard({ project, index }: { project: any, index: n
       </div>
 
       <div className="card-footer">
-        <div className="team-info">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div className="team-info flex-center gap-3">
+          <div className="flex-center gap-1">
             <Users size={14} /> {project.teamSize}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '12px' }}>
+          <div className="flex-center gap-1">
             <Clock size={14} /> {project.commitment}
           </div>
         </div>
         <Link href={`/projects/${project.id}`}>
-          <button 
-            className="btn-primary" 
-            style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
+          <button className="btn-primary flex-center gap-1" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
             View <ChevronRight size={14} />
           </button>
         </Link>

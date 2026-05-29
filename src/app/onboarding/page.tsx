@@ -26,6 +26,10 @@ export default function Onboarding() {
         setUser(session.user);
         const { data: profile } = await supabase.from('users').select('*').eq('id', session.user.id).single();
         if (profile) {
+          if (profile.role === 'admin' || profile.role === 'faculty') {
+            router.push('/');
+            return;
+          }
           setUniversity(profile.university || "");
           setDegree(profile.degree || "");
           setYear(profile.graduation_year || "");

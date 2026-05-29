@@ -46,7 +46,7 @@ export default function Login() {
         </button>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '32px' }}>
-          By continuing, you agree to our Terms of Service and Privacy Policy. Only verified campus students are permitted.
+          By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
 
       </div>
