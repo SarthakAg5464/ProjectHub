@@ -105,7 +105,7 @@ export default function Profile() {
   const completedProjects = portfolio.filter(p => p.status === 'Completed');
 
   return (
-    <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 16px' }}>
+    <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '96px 16px 40px' }}>
       <style>{`
         .bento-grid {
           display: grid;

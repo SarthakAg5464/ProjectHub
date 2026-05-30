@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Clock, Users, GitBranch, GitCommit, Award, ChevronLeft, Calendar, Rocket, Sparkles, Send } from 'lucide-react';
+import { Clock, Users, GitBranch, GitCommit, Award, ChevronLeft, Calendar, Rocket, Sparkles, Send, ExternalLink, Crown } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProjectDetail({ params }: { params: { id: string } }) {
@@ -198,7 +198,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const isFounder = user?.id === project.founder_id;
 
   return (
-    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 16px' }}>
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '96px 16px 40px' }}>
       <style>{`
         .bento-grid {
           display: grid;
@@ -289,7 +289,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               <Rocket size={22} color="var(--accent-emerald)" /> Required Tech Stack
             </h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {project.project_skills?.length > 0 ? project.project_skills.map((skill: any, idx: number) => (
+              {project.project_skills?.length > 0 ? project.project_skills.map((skill: any) => (
                 <span key={skill.skill_name} style={{ 
                   fontSize: '0.95rem', padding: '8px 18px', borderRadius: '12px',
                   background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.05))',
@@ -358,7 +358,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 <div style={{ position: 'absolute', left: '11px', top: '10px', bottom: '10px', width: '2px', background: 'repeating-linear-gradient(to bottom, rgba(99,102,241,0.3) 0, rgba(99,102,241,0.3) 6px, transparent 6px, transparent 12px)' }}></div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                  {milestones.map((m, i) => {
+                  {milestones.map((m) => {
                     let details: any = { desc: m.description, due: '', assigned: '', completed: false, completed_at: '' };
                     try {
                       const parsed = JSON.parse(m.description);
