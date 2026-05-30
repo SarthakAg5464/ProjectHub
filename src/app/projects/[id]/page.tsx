@@ -213,8 +213,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           box-shadow: 0 4px 24px rgba(0,0,0,0.2);
         }
         .bento-header { grid-column: span 12; position: relative; overflow: hidden; }
-        .bento-main { grid-column: span 8; display: flex; flexDirection: column; gap: 32px; }
-        .bento-sidebar { grid-column: span 4; display: flex; flexDirection: column; gap: 24px; }
+        .bento-main { grid-column: span 8; display: flex; flex-direction: column; gap: 32px; }
+        .bento-sidebar { grid-column: span 4; display: flex; flex-direction: column; gap: 24px; }
         
         @media (max-width: 900px) {
           .bento-main, .bento-sidebar { grid-column: span 12; }
