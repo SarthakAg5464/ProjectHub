@@ -60,6 +60,7 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("student");
+  const [dbError, setDbError] = useState<string | null>(null);
   const router = useRouter();
 
   const filters = ["All", "Web App", "Mobile App", "AI/ML", "Hardware/IoT"];
@@ -88,16 +89,21 @@ export default function Home() {
         }
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('projects')
         .select(`
           id, title, type, description, commitment, team_size, stage, status,
-          users ( full_name, avatar_url ),
-          project_skills ( skill_name, is_required ),
-          endorsements ( id )
+          users!projects_founder_id_fkey ( full_name, avatar_url ),
+          project_skills!project_skills_project_id_fkey ( skill_name, is_required ),
+          endorsements!endorsements_project_id_fkey ( id )
         `)
         .eq('status', 'Open')
         .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Supabase Error:", error);
+        setDbError(error.message || JSON.stringify(error));
+      }
       
       if (data) {
         let formattedProjects = data.map((p: any) => {
@@ -174,7 +180,10 @@ export default function Home() {
       <HowItWorksSection />
 
       <section id="ideaboard" className="animate-fade-in delay-3" style={{ scrollMarginTop: '100px' }}>
-        <h2 className="section-title mb-4">The IdeaBoard</h2>
+        <div className="section-header text-center" style={{ marginBottom: '40px' }}>
+          <h2 className="section-title">The IdeaBoard</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Find a team and start building.</p>
+        </div>
         <div className="filters-bar">
           <div className="search-input-wrapper">
             <Search className="search-icon" size={18} />
@@ -199,6 +208,12 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {dbError && (
+          <div style={{ padding: '20px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '12px', color: '#EF4444', marginBottom: '30px', textAlign: 'center' }}>
+            <strong>Database Error:</strong> {dbError}
+          </div>
+        )}
 
         {loading ? (
           <div className="glass-card p-4 text-center" style={{ color: 'var(--text-secondary)' }}>

@@ -10,6 +10,7 @@ import { useAuth } from './AuthProvider';
 export default function Navbar() {
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [userRole, setUserRole] = useState<string>('student');
   const router = useRouter();
   const pathname = usePathname();
@@ -40,8 +41,42 @@ export default function Navbar() {
             .from('applications')
             .select('*', { count: 'exact', head: true })
             .in('project_id', myProjIds)
-            .eq('status', 'Pending');
+            .eq('status', 'Pending')
+            .eq('is_read', false);
           if (count) setPendingCount(count);
+        }
+
+        const { data: appsData } = await supabase
+          .from('applications')
+          .select('project_id')
+          .eq('applicant_id', user.id)
+          .eq('status', 'Accepted');
+          
+        const allProjIds = [...myProjIds, ...(appsData ? appsData.map(a => a.project_id) : [])];
+        
+        if (allProjIds.length > 0) {
+          const { data: receipts } = await supabase
+            .from('chat_read_receipts')
+            .select('project_id, last_read_at')
+            .eq('user_id', user.id)
+            .in('project_id', allProjIds);
+            
+          const receiptsMap = new Map();
+          if (receipts) {
+            receipts.forEach(r => receiptsMap.set(r.project_id, r.last_read_at));
+          }
+
+          let totalUnread = 0;
+          for (const pid of allProjIds) {
+            const lastRead = receiptsMap.get(pid);
+            let query = supabase.from('messages').select('*', { count: 'exact', head: true }).eq('project_id', pid);
+            if (lastRead) {
+              query = query.gt('created_at', lastRead);
+            }
+            const { count } = await query;
+            if (count) totalUnread += count;
+          }
+          setUnreadChatCount(totalUnread);
         }
       }
     }
@@ -96,8 +131,13 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
-                <Link href="/chat" className={isActive('/chat')} onClick={closeMenu}>
+                <Link href="/chat" className={isActive('/chat')} onClick={closeMenu} style={{ position: 'relative' }}>
                   Chat
+                  {unreadChatCount > 0 && (
+                    <span className="badge-notification">
+                      {unreadChatCount}
+                    </span>
+                  )}
                 </Link>
                 <Link href="/profile" className={isActive('/profile')} onClick={closeMenu}>Profile</Link>
               </>

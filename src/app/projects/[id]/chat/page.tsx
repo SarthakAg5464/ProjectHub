@@ -61,13 +61,18 @@ export default function TeamChat({ params }: { params: { id: string } }) {
         .from('messages')
         .select(`
           id, content, created_at, user_id,
-          users ( full_name, avatar_url )
+          users!messages_user_id_fkey ( full_name, avatar_url )
         `)
         .eq('project_id', id)
         .order('created_at', { ascending: true });
 
       if (msgs) {
         setMessages(msgs);
+        await supabase.from('chat_read_receipts').upsert({
+          user_id: session.user.id,
+          project_id: id,
+          last_read_at: new Date().toISOString()
+        });
       }
       
       setLoading(false);
@@ -93,13 +98,18 @@ export default function TeamChat({ params }: { params: { id: string } }) {
             .from('messages')
             .select(`
               id, content, created_at, user_id,
-              users ( full_name, avatar_url )
+              users!messages_user_id_fkey ( full_name, avatar_url )
             `)
             .eq('id', payload.new.id)
             .single();
 
           if (fullMsg) {
             setMessages((prev) => [...prev, fullMsg]);
+            await supabase.from('chat_read_receipts').upsert({
+              user_id: user.id,
+              project_id: id,
+              last_read_at: new Date().toISOString()
+            });
           }
         }
       )

@@ -19,6 +19,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const [applicationFeedback, setApplicationFeedback] = useState<string | null>(null);
   const [isAcceptedMember, setIsAcceptedMember] = useState(false);
   const [showPitchForm, setShowPitchForm] = useState(false);
   const [commits, setCommits] = useState<any[]>([]);
@@ -36,8 +37,8 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         .from('projects')
         .select(`
           *,
-          users ( full_name, avatar_url, university, bio ),
-          project_skills ( skill_name )
+          users!projects_founder_id_fkey ( full_name, avatar_url, university, bio ),
+          project_skills!project_skills_project_id_fkey ( skill_name )
         `)
         .eq('id', id)
         .single();
@@ -48,7 +49,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         if (session) {
           const { data: appData } = await supabase
             .from('applications')
-            .select('id, status')
+            .select('id, status, feedback')
             .eq('project_id', id)
             .eq('applicant_id', session.user.id)
             .single();
@@ -56,6 +57,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           if (appData) {
             setHasApplied(true);
             setApplicationStatus(appData.status);
+            if (appData.feedback) setApplicationFeedback(appData.feedback);
             if (appData.status === 'Accepted') setIsAcceptedMember(true);
           }
 
@@ -89,7 +91,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
       const { data: membersData } = await supabase
         .from('applications')
-        .select(`applicant_id, users ( full_name, avatar_url, university )`)
+        .select(`applicant_id, users!applications_applicant_id_fkey ( full_name, avatar_url, university )`)
         .eq('project_id', id)
         .eq('status', 'Accepted');
 
@@ -109,7 +111,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
       const { data: endorsementsData } = await supabase
         .from('endorsements')
-        .select(`id, note, created_at, users ( full_name, avatar_url, university )`)
+        .select(`id, note, created_at, users!endorsements_faculty_id_fkey ( full_name, avatar_url, university )`)
         .eq('project_id', id)
         .order('created_at', { ascending: false });
 
@@ -148,6 +150,25 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
       setShowPitchForm(false);
     }
     
+    setApplying(false);
+  };
+
+  const handleWithdraw = async () => {
+    if (!user) return;
+    setApplying(true);
+    const { error } = await supabase
+      .from('applications')
+      .delete()
+      .eq('project_id', id)
+      .eq('applicant_id', user.id);
+      
+    if (!error) {
+      setHasApplied(false);
+      setApplicationStatus(null);
+      setApplicationFeedback(null);
+      setShowPitchForm(false);
+      setPitch("");
+    }
     setApplying(false);
   };
 
@@ -214,7 +235,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         }
         .bento-header { grid-column: span 12; position: relative; overflow: hidden; }
         .bento-main { grid-column: span 8; display: flex; flex-direction: column; gap: 32px; }
-        .bento-sidebar { grid-column: span 4; display: flex; flex-direction: column; gap: 24px; }
+        .bento-sidebar { grid-column: span 4; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 96px; align-self: start; }
         
         @media (max-width: 900px) {
           .bento-main, .bento-sidebar { grid-column: span 12; }
@@ -403,7 +424,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         <div className="bento-sidebar">
           
           {/* Actions Block */}
-          <div className="bento-item" style={{ padding: '32px', position: 'sticky', top: '24px', zIndex: 10, background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%)' }}>
+          <div className="bento-item" style={{ padding: '32px', background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%)' }}>
             {isFounder ? (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(99,102,241,0.1)', border: '2px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
@@ -434,10 +455,25 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
                 <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'var(--bg-surface-hover)', border: '2px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
                   <Send size={32} color="var(--text-secondary)" />
                 </div>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>Application Sent</h3>
-                <p style={{ fontSize: '0.95rem', color: applicationStatus === 'Declined' ? '#f87171' : 'var(--text-secondary)', marginBottom: 0, fontWeight: 500 }}>
-                  {applicationStatus === 'Declined' ? 'Your application was not selected.' : 'Your application is pending review.'}
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  {applicationStatus === 'Declined' ? 'Not Selected' : applicationStatus === 'Removed' ? 'Removed from Team' : 'Application Sent'}
+                </h3>
+                <p style={{ fontSize: '0.95rem', color: applicationStatus === 'Declined' || applicationStatus === 'Removed' ? '#f87171' : 'var(--text-secondary)', marginBottom: '16px', fontWeight: 500 }}>
+                  {applicationStatus === 'Declined' ? 'Your application was not selected.' : applicationStatus === 'Removed' ? 'You have been removed from this team.' : 'Your application is pending review.'}
                 </p>
+                {applicationStatus === 'Declined' && (
+                  <>
+                    {applicationFeedback && (
+                      <div style={{ padding: '16px', background: 'rgba(248,113,113,0.05)', borderRadius: '12px', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '20px', textAlign: 'left' }}>
+                        <h4 style={{ fontSize: '0.85rem', color: '#F87171', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Feedback from Founder</h4>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', margin: 0, fontStyle: 'italic', lineHeight: 1.5 }}>"{applicationFeedback}"</p>
+                      </div>
+                    )}
+                    <button onClick={handleWithdraw} disabled={applying} className="btn-ghost" style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(99,102,241,0.3)', color: 'var(--text-primary)' }}>
+                      {applying ? 'Processing...' : 'Withdraw & Reapply'}
+                    </button>
+                  </>
+                )}
               </div>
             ) : !showPitchForm ? (
               <div style={{ textAlign: 'center' }}>

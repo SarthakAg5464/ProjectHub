@@ -26,6 +26,9 @@ export default function ManageProject({ params }: { params: { id: string } }) {
   const [savingGithub, setSavingGithub] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [decliningAppId, setDecliningAppId] = useState<string | null>(null);
+  const [declineFeedback, setDeclineFeedback] = useState<string>("");
+
   useEffect(() => {
     async function loadData() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -52,13 +55,23 @@ export default function ManageProject({ params }: { params: { id: string } }) {
         .from('applications')
         .select(`
           id, pitch, status, created_at, applicant_id,
-          users ( full_name, avatar_url, university, bio, user_skills(skill_name) )
+          users!applications_applicant_id_fkey ( full_name, avatar_url, university, bio, user_skills(skill_name) )
         `)
         .eq('project_id', id)
         .order('created_at', { ascending: false });
 
       if (appsData) {
         setApplications(appsData);
+        
+        // Auto-clear notification badge by marking pending applications as read
+        const hasUnread = appsData.some(app => app.status === 'Pending');
+        if (hasUnread) {
+          await supabase
+            .from('applications')
+            .update({ is_read: true })
+            .eq('project_id', id)
+            .eq('status', 'Pending');
+        }
       }
 
       const { data: milestonesData } = await supabase
@@ -77,14 +90,21 @@ export default function ManageProject({ params }: { params: { id: string } }) {
     loadData();
   }, [id, router]);
 
-  const updateStatus = async (appId: string, newStatus: string) => {
+  const updateStatus = async (appId: string, newStatus: string, feedback: string | null = null) => {
+    const payload: any = { status: newStatus };
+    if (feedback !== null) payload.feedback = feedback;
+    
     const { error } = await supabase
       .from('applications')
-      .update({ status: newStatus })
+      .update(payload)
       .eq('id', appId);
       
     if (!error) {
-      setApplications(applications.map(app => app.id === appId ? { ...app, status: newStatus } : app));
+      setApplications(applications.map(app => app.id === appId ? { ...app, status: newStatus, feedback } : app));
+      if (newStatus === 'Declined') {
+        setDecliningAppId(null);
+        setDeclineFeedback("");
+      }
     }
   };
 
@@ -278,14 +298,35 @@ export default function ManageProject({ params }: { params: { id: string } }) {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: '20px', flexWrap: 'wrap' }}>
-                      <button onClick={() => updateStatus(app.id, 'Accepted')} className="btn-glow" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minWidth: '120px' }}>
-                        <Check size={16} /> Accept
-                      </button>
-                      <button onClick={() => updateStatus(app.id, 'Declined')} className="btn-ghost" style={{ flex: 1, color: '#F87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid rgba(248,113,113,0.3)', minWidth: '120px' }}>
-                        <X size={16} /> Decline
-                      </button>
-                    </div>
+                    {decliningAppId === app.id ? (
+                      <div style={{ width: '100%', padding: '16px', background: 'rgba(248,113,113,0.05)', borderRadius: '12px', border: '1px solid rgba(248,113,113,0.2)', marginTop: '12px' }}>
+                        <p style={{ fontSize: '0.85rem', color: '#F87171', marginBottom: '8px', fontWeight: 600 }}>Reason for declining (optional)</p>
+                        <textarea
+                          className="search-field"
+                          value={declineFeedback}
+                          onChange={(e) => setDeclineFeedback(e.target.value)}
+                          placeholder="e.g. Need more experience with React"
+                          style={{ width: '100%', minHeight: '60px', padding: '12px', fontSize: '0.9rem', borderRadius: '8px', background: 'var(--bg-main)' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                          <button onClick={() => updateStatus(app.id, 'Declined', declineFeedback)} className="btn-glow" style={{ background: '#F87171', padding: '8px 16px', fontSize: '0.85rem' }}>
+                            Confirm Decline
+                          </button>
+                          <button onClick={() => setDecliningAppId(null)} className="btn-ghost" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: '20px', flexWrap: 'wrap', width: '100%' }}>
+                        <button onClick={() => updateStatus(app.id, 'Accepted')} className="btn-glow" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minWidth: '120px' }}>
+                          <Check size={16} /> Accept
+                        </button>
+                        <button onClick={() => setDecliningAppId(app.id)} className="btn-ghost" style={{ flex: 1, color: '#F87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid rgba(248,113,113,0.3)', minWidth: '120px' }}>
+                          <X size={16} /> Decline
+                        </button>
+                      </div>
+                    )}
                   </div>
                   );
                 })}

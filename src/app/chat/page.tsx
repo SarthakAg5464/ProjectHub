@@ -28,7 +28,7 @@ export default function ChatHub() {
       const { data: appsData } = await supabase
         .from('applications')
         .select(`
-          projects ( id, title )
+          projects!applications_project_id_fkey ( id, title )
         `)
         .eq('applicant_id', user.id)
         .eq('status', 'Accepted');
@@ -48,6 +48,31 @@ export default function ChatHub() {
       }
 
       const allProjects = Array.from(projectsMap.values());
+      
+      if (allProjects.length > 0) {
+        const allProjIds = allProjects.map((p: any) => p.id);
+        const { data: receipts } = await supabase
+          .from('chat_read_receipts')
+          .select('project_id, last_read_at')
+          .eq('user_id', user.id)
+          .in('project_id', allProjIds);
+          
+        const receiptsMap = new Map();
+        if (receipts) {
+          receipts.forEach(r => receiptsMap.set(r.project_id, r.last_read_at));
+        }
+
+        for (const proj of allProjects as any[]) {
+          const lastRead = receiptsMap.get(proj.id);
+          let query = supabase.from('messages').select('*', { count: 'exact', head: true }).eq('project_id', proj.id);
+          if (lastRead) {
+            query = query.gt('created_at', lastRead);
+          }
+          const { count } = await query;
+          proj.unreadCount = count || 0;
+        }
+      }
+
       setActiveProjects(allProjects);
 
       setLoading(false);
@@ -109,6 +134,11 @@ export default function ChatHub() {
                   <div>
                     <h3 style={{ fontSize: '1.25rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {project.title}
+                      {project.unreadCount > 0 && (
+                        <span style={{ fontSize: '0.75rem', background: '#F87171', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                          {project.unreadCount} New
+                        </span>
+                      )}
                     </h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Tap to open team chat</p>
                   </div>
