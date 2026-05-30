@@ -424,25 +424,22 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         <div className="bento-sidebar">
           
           {/* Actions Block */}
-          <div className="bento-item" style={{ padding: '32px', background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%)' }}>
-            {isFounder ? (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(99,102,241,0.1)', border: '2px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
-                  <Crown size={32} color="var(--accent-indigo)" />
+          {(isFounder || !(userRole === 'admin' || userRole === 'faculty')) && (
+            <div className="bento-item" style={{ padding: '32px', background: 'linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%)' }}>
+              {isFounder ? (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(99,102,241,0.1)', border: '2px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+                    <Crown size={32} color="var(--accent-indigo)" />
+                  </div>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>You are the Founder</h3>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>Manage your team, track milestones, and update repository settings.</p>
+                  <Link href={`/projects/${project.id}/manage`}>
+                    <button className="btn-glow" style={{ width: '100%', padding: '16px', fontSize: '1.05rem', borderRadius: '16px', fontWeight: 700 }}>
+                      Manage Project Hub
+                    </button>
+                  </Link>
                 </div>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>You are the Founder</h3>
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>Manage your team, track milestones, and update repository settings.</p>
-                <Link href={`/projects/${project.id}/manage`}>
-                  <button className="btn-glow" style={{ width: '100%', padding: '16px', fontSize: '1.05rem', borderRadius: '16px', fontWeight: 700 }}>
-                    Manage Project Hub
-                  </button>
-                </Link>
-              </div>
-            ) : (userRole === 'admin' || userRole === 'faculty') ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Viewing as Staff/Faculty
-              </div>
-            ) : isAcceptedMember ? (
+              ) : isAcceptedMember ? (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', border: '2px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
                   <Award size={32} color="var(--accent-emerald)" />
@@ -520,6 +517,7 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
               </div>
             )}
           </div>
+        )}
 
           {/* Active Team Block */}
           <div className="bento-item" style={{ padding: '32px' }}>
