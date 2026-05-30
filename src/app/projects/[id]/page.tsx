@@ -174,74 +174,82 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
   };
 
   if (loading) {
-    return <div className="flex-center p-4 text-muted" style={{ minHeight: '60vh' }}>Loading project details...</div>;
+    return <div className="flex-center" style={{ minHeight: '60vh', color: 'var(--text-secondary)', fontFamily: 'var(--font-main)' }}>Loading project details...</div>;
   }
 
   if (!project) {
-    return <div className="flex-center p-4 text-muted" style={{ minHeight: '60vh' }}>Project not found.</div>;
+    return <div className="flex-center" style={{ minHeight: '60vh', color: 'var(--text-secondary)', fontFamily: 'var(--font-main)' }}>Project not found.</div>;
   }
 
   const isFounder = user?.id === project.founder_id;
 
   return (
-    <main className="main-content" style={{ maxWidth: '800px' }}>
+    <main className="main-content" style={{ maxWidth: '860px' }}>
       <BackButton href="/" text="Back to IdeaBoard" />
-      
-      <div className="glass-panel p-4">
-        {endorsements.length > 0 && (
-          <div className="flex-center gap-1 mb-3 text-sm text-bold" style={{ display: 'inline-flex', background: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent-secondary)', padding: '6px 12px', borderRadius: '30px' }}>
-            <Award size={16} /> {endorsements.length} Faculty Endorsement{endorsements.length !== 1 ? 's' : ''}
+
+      <div className="glass-card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+
+        <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+          {endorsements.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <span className="badge badge-purple" style={{ fontSize: '0.82rem', padding: '6px 14px', gap: '6px' }}>
+                <Award size={14} /> {endorsements.length} Faculty Endorsement{endorsements.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <span className="badge badge-indigo">{project.type}</span>
+            <span className="badge badge-indigo">{project.stage}</span>
           </div>
-        )}
-        <div className="mb-4">
-          <div className="project-type mb-1">{project.type} • {project.stage}</div>
-          <h1 className="mb-2" style={{ fontSize: '2.5rem' }}>{project.title}</h1>
-          <p className="text-muted" style={{ fontSize: '1.1rem' }}>{project.description}</p>
+          <h1 className="section-title" style={{ fontSize: '2.2rem', marginBottom: '12px', lineHeight: 1.15 }}>{project.title}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.7 }}>{project.description}</p>
         </div>
-        
-        <div className="flex-center gap-3 mb-4 p-4" style={{ padding: '0 0 32px 0', borderBottom: '1px solid var(--border-color)', justifyContent: 'flex-start' }}>
-          <div className="flex-center gap-1">
-            <Users size={18} color="var(--text-secondary)" />
+
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
+            <Users size={18} color="var(--accent-indigo)" />
             <span>{project.team_size}</span>
           </div>
-          <div className="flex-center gap-1">
-            <Clock size={18} color="var(--text-secondary)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
+            <Clock size={18} color="var(--accent-indigo)" />
             <span>{project.commitment}</span>
           </div>
         </div>
 
         {project.github_url && (
-          <div className="mb-4" style={{ paddingBottom: '32px', borderBottom: '1px solid var(--border-color)' }}>
-            <div className="flex-between mb-3">
-              <div className="flex-center gap-2">
-                <GitBranch size={24} />
-                <h3 style={{ fontSize: '1.25rem' }}>GitHub Activity</h3>
+          <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-violet))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <GitBranch size={18} color="#fff" />
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>GitHub Activity</h3>
               </div>
-              <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm" style={{ padding: '8px 16px' }}>
+              <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
                 View Repository
               </a>
             </div>
             
             {commits.length === 0 ? (
-              <div className="p-3 text-center text-muted" style={{ background: 'var(--bg-surface-hover)', borderRadius: '12px' }}>
+              <div className="glass-panel" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 No recent commits found or repository is private.
               </div>
             ) : (
-              <div className="flex-col gap-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {commits.map((commit: any, idx: number) => (
-                  <div key={idx} className="flex-center gap-2 p-2 align-start" style={{ background: 'var(--bg-surface-hover)', borderRadius: '12px', alignItems: 'flex-start' }}>
-                    <div className="text-muted" style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '8px', borderRadius: '8px' }}>
-                      <GitCommit size={20} />
+                  <div key={idx} className="glass-card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                    <div style={{ width: '36px', height: '36px', minWidth: '36px', borderRadius: '10px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <GitCommit size={18} color="var(--accent-indigo)" />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div className="text-bold mb-1">{commit.commit.message.split('\n')[0]}</div>
-                      <div className="flex-center gap-1 text-sm text-muted" style={{ justifyContent: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{commit.commit.message.split('\n')[0]}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         <span>{commit.commit.author.name}</span>
-                        <span>•</span>
+                        <span style={{ opacity: 0.4 }}>•</span>
                         <span>{new Date(commit.commit.author.date).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <a href={commit.html_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: 'var(--accent-secondary)' }}>
+                    <a href={commit.html_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--accent-violet)', fontFamily: 'monospace', flexShrink: 0 }}>
                       {commit.sha.substring(0, 7)}
                     </a>
                   </div>
@@ -251,38 +259,37 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        <div className="mb-4" style={{ paddingBottom: '32px', borderBottom: '1px solid var(--border-color)' }}>
-          <h3 className="mb-3" style={{ fontSize: '1.25rem' }}>Active Team</h3>
-          <div className="grid-auto">
-            
-            <Link href={`/profile/${project.founder_id}`}>
-              <div className="glass-panel hover-scale flex-center gap-2 p-2" style={{ justifyContent: 'flex-start', cursor: 'pointer' }}>
-                <img 
-                  src={project.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(project.users?.full_name || 'Anonymous')}&background=6366f1&color=fff`} 
-                  alt={project.users?.full_name} 
-                  style={{ width: '40px', height: '40px', borderRadius: '50%' }} 
+        <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '20px' }}>Active Team</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+            <Link href={`/profile/${project.founder_id}`} style={{ flex: '1 1 calc(50% - 7px)', minWidth: '240px' }}>
+              <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                <img
+                  src={project.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(project.users?.full_name || 'Anonymous')}&background=6366f1&color=fff`}
+                  alt={project.users?.full_name}
+                  style={{ width: '42px', height: '42px', borderRadius: '14px', border: '2px solid rgba(99,102,241,0.25)', objectFit: 'cover' }}
                 />
-                <div>
-                  <div className="flex-center gap-1 text-bold" style={{ fontSize: '0.9rem', justifyContent: 'flex-start' }}>
-                    {project.users?.full_name || 'Anonymous'}
-                    <span className="text-sm" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', padding: '2px 6px', borderRadius: '12px' }}>Founder</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{project.users?.full_name || 'Anonymous'}</span>
+                    <span className="badge badge-indigo">Founder</span>
                   </div>
-                  <div className="text-sm text-muted">{project.users?.university}</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{project.users?.university}</div>
                 </div>
               </div>
             </Link>
 
             {teamMembers.map((member, index) => (
-              <Link key={index} href={`/profile/${member.applicant_id}`}>
-                <div className="glass-panel hover-scale flex-center gap-2 p-2" style={{ justifyContent: 'flex-start', cursor: 'pointer' }}>
-                  <img 
-                    src={member.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.users?.full_name || 'Anonymous')}&background=10B981&color=fff`} 
-                    alt={member.users?.full_name} 
-                    style={{ width: '40px', height: '40px', borderRadius: '50%' }} 
+              <Link key={index} href={`/profile/${member.applicant_id}`} style={{ flex: '1 1 calc(50% - 7px)', minWidth: '240px' }}>
+                <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                  <img
+                    src={member.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.users?.full_name || 'Anonymous')}&background=10B981&color=fff`}
+                    alt={member.users?.full_name}
+                    style={{ width: '42px', height: '42px', borderRadius: '14px', border: '2px solid rgba(99,102,241,0.25)', objectFit: 'cover' }}
                   />
-                  <div>
-                    <div className="text-bold" style={{ fontSize: '0.9rem' }}>{member.users?.full_name || 'Anonymous'}</div>
-                    <div className="text-sm text-muted">{member.users?.university}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{member.users?.full_name || 'Anonymous'}</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{member.users?.university}</div>
                   </div>
                 </div>
               </Link>
@@ -291,25 +298,37 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         </div>
 
         {milestones.length > 0 && (
-          <div className="mb-4" style={{ paddingBottom: '32px', borderBottom: '1px solid var(--border-color)' }}>
-            <h3 className="mb-3" style={{ fontSize: '1.25rem' }}>BuildTrack Timeline</h3>
-            <div className="flex-col gap-3" style={{ borderLeft: '2px solid var(--border-color)', paddingLeft: '24px', marginLeft: '12px' }}>
+          <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '20px' }}>BuildTrack Timeline</h3>
+            <div style={{ borderLeft: '2px solid rgba(99,102,241,0.15)', paddingLeft: '28px', marginLeft: '14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {milestones.map(m => {
-                let details = { desc: m.description, due: '', assigned: '', completed: false };
+                let details: any = { desc: m.description, due: '', assigned: '', completed: false, completed_at: '' };
                 try {
                   const parsed = JSON.parse(m.description);
                   if (parsed.desc !== undefined) details = { ...details, ...parsed };
                 } catch (e) {}
                 
+                const isOverdue = !details.completed && details.due && new Date(details.due) < new Date(new Date().setHours(0,0,0,0));
+
                 return (
-                  <div key={m.id} className="glass-panel p-3" style={{ position: 'relative', borderColor: details.completed ? 'rgba(16, 185, 129, 0.3)' : undefined }}>
-                    <div style={{ position: 'absolute', left: '-31px', top: '28px', width: '14px', height: '14px', borderRadius: '50%', background: details.completed ? '#10B981' : 'var(--accent-primary)', border: '3px solid var(--bg-main)' }}></div>
-                    <div className="text-sm text-muted mb-1 text-bold">
-                      {new Date(m.created_at).toLocaleDateString()} {details.due ? `• Due: ${new Date(details.due).toLocaleDateString()}` : ''} 
-                      {details.completed && <span style={{ color: '#10B981', marginLeft: '8px' }}>✓ Completed</span>}
+                  <div key={m.id} className="glass-card" style={{ position: 'relative', padding: '20px', borderColor: details.completed ? 'rgba(16, 185, 129, 0.3)' : isOverdue ? 'rgba(248, 113, 113, 0.3)' : undefined }}>
+                    <div style={{ position: 'absolute', left: '-35px', top: '24px', width: '12px', height: '12px', borderRadius: '50%', background: details.completed ? 'var(--accent-emerald)' : isOverdue ? '#f87171' : 'linear-gradient(135deg, var(--accent-indigo), var(--accent-violet))', boxShadow: details.completed ? '0 0 8px rgba(16,185,129,0.4)' : isOverdue ? '0 0 8px rgba(248,113,113,0.4)' : '0 0 8px rgba(99,102,241,0.3)' }}></div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>{new Date(m.created_at).toLocaleDateString()}</span>
+                      {details.due && <span style={{ color: isOverdue ? '#f87171' : undefined }}>• Due: {new Date(details.due).toLocaleDateString()}</span>}
+                      {details.completed && (
+                        <span style={{ 
+                          display: 'inline-flex', alignItems: 'center', gap: '4px', 
+                          background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', 
+                          padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(16, 185, 129, 0.2)' 
+                        }}>
+                          ✓ Completed {details.completed_at && `on ${new Date(details.completed_at).toLocaleDateString()}`}
+                        </span>
+                      )}
+                      {isOverdue && <span style={{ color: '#f87171', fontWeight: 700 }}>⚠️ Overdue</span>}
                     </div>
-                    <h4 className="mb-1" style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>{m.title}</h4>
-                    <p className="text-muted" style={{ lineHeight: 1.6, fontSize: '0.95rem' }}>{details.desc}</p>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '6px' }}>{m.title}</h4>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: 1.65, fontSize: '0.92rem', margin: 0 }}>{details.desc}</p>
                   </div>
                 );
               })}
@@ -318,59 +337,63 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         )}
         
         {endorsements.length > 0 && (
-          <div className="mb-4" style={{ paddingBottom: '32px', borderBottom: '1px solid var(--border-color)' }}>
-            <h3 className="mb-3 flex-center gap-1" style={{ fontSize: '1.25rem', color: 'var(--accent-secondary)', justifyContent: 'flex-start' }}>
-              <Award size={24} /> Faculty Endorsements
-            </h3>
-            <div className="flex-col gap-2">
+          <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, var(--accent-violet), #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Award size={18} color="#fff" />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>Faculty Endorsements</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {endorsements.map(e => (
-                <div key={e.id} className="glass-panel p-3" style={{ background: 'var(--bg-surface-hover)', borderColor: 'rgba(168, 85, 247, 0.2)' }}>
-                  <div className="flex-center gap-2 mb-2" style={{ justifyContent: 'flex-start' }}>
-                    <img 
-                      src={e.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.users?.full_name || 'Faculty')}&background=a855f7&color=fff`} 
-                      alt={e.users?.full_name} 
-                      style={{ width: '40px', height: '40px', borderRadius: '50%' }} 
+                <div key={e.id} style={{ background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                    <img
+                      src={e.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.users?.full_name || 'Faculty')}&background=a855f7&color=fff`}
+                      alt={e.users?.full_name}
+                      style={{ width: '42px', height: '42px', borderRadius: '14px', border: '2px solid rgba(99,102,241,0.25)', objectFit: 'cover' }}
                     />
                     <div>
-                      <div className="text-bold">{e.users?.full_name || 'Faculty Member'}</div>
-                      <div className="text-sm text-muted">{e.users?.university}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{e.users?.full_name || 'Faculty Member'}</div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{e.users?.university}</div>
                     </div>
                   </div>
-                  <p style={{ color: 'var(--text-primary)', fontSize: '1rem', fontStyle: 'italic', lineHeight: 1.6 }}>"{e.note}"</p>
+                  <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontStyle: 'italic', lineHeight: 1.7, paddingLeft: '4px', borderLeft: '2px solid rgba(139,92,246,0.3)' }}>&ldquo;{e.note}&rdquo;</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        <div className="mb-4">
-          <h3 className="mb-2" style={{ fontSize: '1.1rem' }}>Required Skills</h3>
-          <div className="skills-list" style={{ paddingTop: 0 }}>
+        <div style={{ paddingBottom: '28px', marginBottom: '28px', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>Required Skills</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {project.project_skills?.map((skill: any) => (
-              <span key={skill.skill_name} className="skill-badge">{skill.skill_name}</span>
+              <span key={skill.skill_name} className="badge badge-success" style={{ fontSize: '0.8rem', padding: '5px 14px' }}>{skill.skill_name}</span>
             ))}
           </div>
         </div>
 
         {userRole === 'faculty' && !isFounder && (
-          <div className="glass-panel p-3 mb-4" style={{ background: 'rgba(168, 85, 247, 0.05)', borderColor: 'rgba(168, 85, 247, 0.3)' }}>
-            <h3 className="mb-2 flex-center gap-1" style={{ fontSize: '1.1rem', color: 'var(--accent-secondary)', justifyContent: 'flex-start' }}>
-              <Award size={18} /> Endorse this Project
-            </h3>
-            <p className="text-sm text-muted mb-2">
+          <div style={{ background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: 'var(--radius-lg)', padding: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <Award size={20} color="var(--accent-violet)" />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-violet)' }}>Endorse this Project</h3>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
               Your public note of guidance, ideas, and support gives this student project massive credibility across campus.
             </p>
-            <form onSubmit={handleEndorse} className="flex-col gap-2">
-              <textarea 
-                required 
+            <form onSubmit={handleEndorse} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <textarea
+                required
                 maxLength={300}
-                className="search-input" 
+                className="search-field"
                 placeholder="Write a brief note of support, guidance, or ideas for this team..."
-                style={{ minHeight: '80px', resize: 'vertical', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+                style={{ minHeight: '90px', resize: 'vertical', borderColor: 'rgba(139, 92, 246, 0.3)' }}
                 value={endorsementNote}
                 onChange={(e) => setEndorsementNote(e.target.value)}
               />
-              <button type="submit" disabled={endorsing} className="btn-primary p-2 text-center" style={{ background: 'var(--accent-secondary)' }}>
+              <button type="submit" disabled={endorsing} className="btn-glow" style={{ background: 'linear-gradient(135deg, var(--accent-violet), #a855f7)', textAlign: 'center', padding: '12px 24px' }}>
                 {endorsing ? 'Posting...' : 'Post Endorsement'}
               </button>
             </form>
@@ -379,51 +402,51 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
 
         {isFounder ? (
           <Link href={`/projects/${project.id}/manage`}>
-            <button className="btn-secondary text-center p-3" style={{ width: '100%', fontSize: '1.05rem' }}>
+            <button className="btn-glow" style={{ width: '100%', textAlign: 'center', padding: '14px 24px', fontSize: '1rem' }}>
               Manage Project & Applications
             </button>
           </Link>
         ) : (userRole === 'admin' || userRole === 'faculty') ? (
           null
         ) : isAcceptedMember ? (
-          <div className="flex-center gap-1 p-3 text-bold text-center" style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34D399', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '16px', fontWeight: 600, background: 'rgba(16, 185, 129, 0.08)', color: '#34D399', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16,185,129,0.2)' }}>
             <Award size={18} /> You are an active member of this project team!
           </div>
         ) : hasApplied ? (
-          <div className="p-3 text-center text-muted text-bold" style={{ background: 'var(--bg-surface-hover)', borderRadius: '12px' }}>
-            {applicationStatus === 'Declined' 
+          <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600, background: 'var(--bg-card-hover)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            {applicationStatus === 'Declined'
               ? 'Your application was not selected for this project.'
               : 'Your application is currently pending review.'}
           </div>
         ) : !showPitchForm ? (
-          <button 
-            onClick={() => setShowPitchForm(true)} 
-            className="btn-primary flex-center gap-1 p-3" 
-            style={{ width: '100%', fontSize: '1.05rem', background: '#10B981' }}
+          <button
+            onClick={() => setShowPitchForm(true)}
+            className="btn-glow"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '14px 24px', fontSize: '1rem', background: 'linear-gradient(135deg, #10b981, #059669)' }}
           >
             <Users size={18} /> Apply to Join Team
           </button>
         ) : (
-          <div className="glass-panel p-3" style={{ borderColor: 'rgba(16, 185, 129, 0.3)' }}>
-            <h3 className="mb-2" style={{ fontSize: '1.1rem', color: '#10B981' }}>Pitch the Founder</h3>
-            <form onSubmit={handleApply} className="flex-col gap-2">
-              <textarea 
-                required 
+          <div className="glass-panel" style={{ padding: '24px', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-emerald)', marginBottom: '16px' }}>Pitch the Founder</h3>
+            <form onSubmit={handleApply} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <textarea
+                required
                 maxLength={300}
-                className="search-input" 
+                className="search-field"
                 placeholder="Why are you a good fit for this team? (Max 300 characters)"
                 style={{ minHeight: '100px', resize: 'vertical' }}
                 value={pitch}
                 onChange={(e) => setPitch(e.target.value)}
               />
-              <div className="text-right text-sm text-muted">
+              <div style={{ textAlign: 'right', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 {pitch.length}/300
               </div>
-              <div className="flex-between gap-2">
-                <button type="button" onClick={() => setShowPitchForm(false)} className="btn-secondary p-3" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => setShowPitchForm(false)} className="btn-ghost" style={{ flex: 1, padding: '12px 24px', textAlign: 'center', minWidth: '120px' }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={applying} className="btn-primary p-3 text-center" style={{ flex: 2, fontSize: '1.05rem', background: '#10B981' }}>
+                <button type="submit" disabled={applying} className="btn-glow" style={{ flex: 2, padding: '12px 24px', textAlign: 'center', fontSize: '1rem', background: 'linear-gradient(135deg, #10b981, #059669)', minWidth: '180px' }}>
                   {applying ? 'Submitting...' : 'Send Pitch'}
                 </button>
               </div>

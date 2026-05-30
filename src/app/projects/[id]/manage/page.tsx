@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Check, X, Clock, Plus, GitBranch } from 'lucide-react';
+import { Check, X, Clock, Plus, GitBranch, Trash2, AlertTriangle } from 'lucide-react';
 import BackButton from '../../../../components/BackButton';
 import Link from 'next/link';
 
@@ -24,6 +24,7 @@ export default function ManageProject({ params }: { params: { id: string } }) {
 
   const [githubUrl, setGithubUrl] = useState("");
   const [savingGithub, setSavingGithub] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -119,10 +120,10 @@ export default function ManageProject({ params }: { params: { id: string } }) {
     let details = { desc: currentDesc, due: '', assigned: '', completed: false };
     try {
       const parsed = JSON.parse(currentDesc);
-      if (parsed.desc !== undefined) details = { ...parsed };
+      if (parsed.desc !== undefined) details = { ...details, ...parsed };
     } catch (e) {}
 
-    const newPayload = JSON.stringify({ ...details, completed: true });
+    const newPayload = JSON.stringify({ ...details, completed: true, completed_at: new Date().toISOString() });
 
     const { error } = await supabase
       .from('milestones')
@@ -147,46 +148,78 @@ export default function ManageProject({ params }: { params: { id: string } }) {
     setSavingGithub(false);
   };
 
+  const handleDeleteProject = async () => {
+    if (confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      setDeleting(true);
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+        
+      if (!error) {
+        router.push('/dashboard');
+      } else {
+        alert(error.message);
+        setDeleting(false);
+      }
+    }
+  };
+
   if (loading) {
-    return <div className="flex-center p-4 text-muted" style={{ minHeight: '60vh' }}>Loading inbox...</div>;
+    return (
+      <div className="flex-center" style={{ minHeight: '60vh' }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
+        }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '50%',
+            border: '3px solid var(--border-subtle)', borderTopColor: 'var(--accent-indigo)',
+            animation: 'spin 0.8s linear infinite'
+          }} />
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: 500 }}>
+            Loading workspace...
+          </span>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
   }
 
   return (
     <main className="main-content" style={{ maxWidth: '1000px' }}>
       <BackButton href="/dashboard" text="Back to Dashboard" />
       
-      <div className="mb-4">
-        <h1 className="mb-1" style={{ fontSize: '2.5rem' }}>{project.title}</h1>
-        <p className="text-muted">Manage your team and track your progress.</p>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{project.title}</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>Manage your team and track your progress.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '32px' }}>
         
-        
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {applications.filter(a => a.status === 'Accepted').length > 0 && (
-            <div className="mb-4">
-              <h2 className="mb-3" style={{ fontSize: '1.5rem', color: '#34D399' }}>Active Roster</h2>
-              <div className="flex-col gap-2">
+            <div>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent-emerald)', marginBottom: '16px' }}>Active Roster</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {applications.filter(a => a.status === 'Accepted').map(app => {
                   const applicant = Array.isArray(app.users) ? app.users[0] : app.users;
                   return (
-                    <div key={app.id} className="glass-panel p-2" style={{ borderColor: 'rgba(52, 211, 153, 0.3)' }}>
-                      <div className="flex-between">
-                        <Link href={`/profile/${app.applicant_id}`}>
-                          <div className="flex-center gap-2" style={{ cursor: 'pointer', justifyContent: 'flex-start' }}>
+                    <div key={app.id} className="glass-card" style={{ padding: '16px', borderLeft: '3px solid #10b981' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                        <Link href={`/profile/${app.applicant_id}`} style={{ textDecoration: 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
                             <img 
                               src={applicant?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(applicant?.full_name || 'Anonymous')}&background=6366f1&color=fff`} 
                               alt={applicant?.full_name || 'Anonymous'}
-                              style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                              style={{ width: '44px', height: '44px', borderRadius: '14px', border: '2px solid rgba(99,102,241,0.25)', objectFit: 'cover' }}
                             />
                             <div>
-                              <h3 className="mb-0" style={{ fontSize: '1.1rem' }}>{applicant?.full_name || 'Anonymous'}</h3>
-                              <div className="text-sm text-muted">{applicant?.university || 'University not specified'}</div>
+                              <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{applicant?.full_name || 'Anonymous'}</h3>
+                              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{applicant?.university || 'University not specified'}</div>
                             </div>
                           </div>
                         </Link>
-                        <button onClick={() => updateStatus(app.id, 'Removed')} className="btn-secondary text-sm" style={{ padding: '6px 12px', color: '#F87171', border: '1px solid rgba(248, 113, 113, 0.3)' }}>
+                        <button onClick={() => updateStatus(app.id, 'Removed')} className="btn-ghost" style={{ padding: '8px 16px', color: '#F87171', border: '1px solid rgba(248, 113, 113, 0.3)', fontSize: '0.85rem' }}>
                           Remove
                         </button>
                       </div>
@@ -197,217 +230,259 @@ export default function ManageProject({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          <h2 className="mb-3" style={{ fontSize: '1.5rem' }}>Pending Requests</h2>
-          {applications.filter(a => a.status === 'Pending').length === 0 ? (
-            <div className="glass-panel p-4 text-center text-muted">
-              <p>No new applications.</p>
-            </div>
-          ) : (
-            <div className="flex-col gap-3">
-              {applications.filter(a => a.status === 'Pending').map(app => {
-                const applicant = Array.isArray(app.users) ? app.users[0] : app.users;
-                return (
-                  <div key={app.id} className="glass-panel p-3">
-                    <div className="flex-between mb-2 align-start" style={{ alignItems: 'flex-start' }}>
-                      <div className="flex-center gap-2" style={{ justifyContent: 'flex-start' }}>
-                        <Link href={`/profile/${app.applicant_id}`}>
-                          <img 
-                            src={applicant?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(applicant?.full_name || 'Anonymous')}&background=6366f1&color=fff`} 
-                            alt={applicant?.full_name || 'Anonymous'}
-                            style={{ width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer' }}
-                          />
-                        </Link>
-                        <div>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Pending Requests</h2>
+            {applications.filter(a => a.status === 'Pending').length === 0 ? (
+              <div className="glass-card" style={{ padding: '32px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-secondary)' }}>No new applications.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {applications.filter(a => a.status === 'Pending').map(app => {
+                  const applicant = Array.isArray(app.users) ? app.users[0] : app.users;
+                  return (
+                    <div key={app.id} className="glass-card" style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <Link href={`/profile/${app.applicant_id}`}>
-                            <h3 className="mb-0" style={{ fontSize: '1.1rem', cursor: 'pointer' }}>{applicant?.full_name || 'Anonymous'}</h3>
+                            <img 
+                              src={applicant?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(applicant?.full_name || 'Anonymous')}&background=6366f1&color=fff`} 
+                              alt={applicant?.full_name || 'Anonymous'}
+                              style={{ width: '48px', height: '48px', borderRadius: '14px', border: '2px solid rgba(99,102,241,0.25)', cursor: 'pointer', objectFit: 'cover' }}
+                            />
                           </Link>
-                          <div className="text-sm text-muted">{applicant?.university || 'University not specified'}</div>
+                          <div>
+                            <Link href={`/profile/${app.applicant_id}`} style={{ textDecoration: 'none' }}>
+                              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, cursor: 'pointer' }}>{applicant?.full_name || 'Anonymous'}</h3>
+                            </Link>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{applicant?.university || 'University not specified'}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '4px 10px', background: 'var(--bg-surface-hover)', borderRadius: '12px' }}>
+                          {new Date(app.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="text-sm text-muted">
-                        {new Date(app.created_at).toLocaleDateString()}
+
+                    <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--accent-indigo)', marginBottom: '8px', fontWeight: 600 }}>
+                        <Clock size={14} /> Application Pitch
+                      </div>
+                      <p style={{ lineHeight: 1.6, fontSize: '0.95rem', color: 'var(--text-primary)', margin: 0 }}>"{app.pitch}"</p>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {applicant?.user_skills?.map((skill: any) => (
+                          <span key={skill.skill_name} className="badge badge-success" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>{skill.skill_name}</span>
+                        ))}
                       </div>
                     </div>
 
-                  <div className="mb-2 p-2" style={{ background: 'var(--bg-surface-hover)', borderRadius: '12px' }}>
-                    <div className="flex-center gap-1 text-sm text-muted mb-1" style={{ justifyContent: 'flex-start' }}>
-                      <Clock size={14} /> Application Pitch
-                    </div>
-                    <p style={{ lineHeight: 1.6, fontSize: '0.95rem' }}>"{app.pitch}"</p>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="skills-list" style={{ paddingTop: 0 }}>
-                      {applicant?.user_skills?.map((skill: any) => (
-                        <span key={skill.skill_name} className="skill-badge">{skill.skill_name}</span>
-                      ))}
+                    <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: '20px', flexWrap: 'wrap' }}>
+                      <button onClick={() => updateStatus(app.id, 'Accepted')} className="btn-glow" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minWidth: '120px' }}>
+                        <Check size={16} /> Accept
+                      </button>
+                      <button onClick={() => updateStatus(app.id, 'Declined')} className="btn-ghost" style={{ flex: 1, color: '#F87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '1px solid rgba(248,113,113,0.3)', minWidth: '120px' }}>
+                        <X size={16} /> Decline
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex-center gap-1" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                    <button onClick={() => updateStatus(app.id, 'Accepted')} className="btn-primary flex-center gap-1 flex-1 text-sm" style={{ background: '#10B981' }}>
-                      <Check size={16} /> Accept
-                    </button>
-                    <button onClick={() => updateStatus(app.id, 'Declined')} className="btn-secondary" style={{ flex: 1, color: '#F87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                      <X size={16} /> Decline
-                    </button>
-                  </div>
-                </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        
-        <div>
-          <h2 className="mb-3" style={{ fontSize: '1.5rem' }}>Integrations</h2>
-          <div className="glass-panel p-3 mb-4">
-            <div className="flex-center gap-1 mb-2" style={{ justifyContent: 'flex-start' }}>
-              <GitBranch size={20} />
-              <h3 className="mb-0" style={{ fontSize: '1.1rem' }}>GitHub Repository</h3>
-            </div>
-            <p className="text-sm text-muted mb-2">Link your repository to display a live commit feed on your project page.</p>
-            <div className="flex-center gap-1">
-              <input 
-                type="url" 
-                placeholder="https://github.com/username/repo" 
-                className="search-input" 
-                style={{ flex: 1, padding: '10px 16px' }}
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-              />
-              <button 
-                className="btn-primary" 
-                onClick={handleSaveGithub}
-                disabled={savingGithub || githubUrl === project.github_url}
-              >
-                {savingGithub ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </div>
-
-          <h2 className="mb-3" style={{ fontSize: '1.5rem' }}>BuildTrack</h2>
-          
-          <div className="glass-panel p-3 mb-4">
-            <h3 className="mb-2" style={{ fontSize: '1.1rem' }}>Post New Milestone</h3>
-            <form onSubmit={handlePostMilestone} className="flex-col gap-2">
-              <input 
-                type="text" 
-                required 
-                className="search-input" 
-                placeholder="e.g. Database Designed"
-                value={milestoneTitle}
-                onChange={(e) => setMilestoneTitle(e.target.value)}
-              />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <input 
-                  type="date" 
-                  className="search-input" 
-                  style={{ padding: '12px 16px' }}
-                  value={milestoneDue}
-                  onChange={(e) => setMilestoneDue(e.target.value)}
-                />
-                <select 
-                  className="search-input" 
-                  style={{ padding: '12px 16px', appearance: 'none' }}
-                  value={milestoneAssigned}
-                  onChange={(e) => setMilestoneAssigned(e.target.value)}
-                >
-                  <option value="">Assign to (Optional)</option>
-                  <option value={project.founder_id}>Myself (Founder)</option>
-                  {applications.filter(a => a.status === 'Accepted').map(a => {
-                    const applicant = Array.isArray(a.users) ? a.users[0] : a.users;
-                    return (
-                      <option key={a.applicant_id} value={a.applicant_id}>
-                        {applicant?.full_name || 'Anonymous'}
-                      </option>
-                    );
-                  })}
-                </select>
+                  );
+                })}
               </div>
-              <textarea 
-                required 
-                className="search-input" 
-                placeholder="What is the goal of this milestone?"
-                style={{ minHeight: '80px', resize: 'vertical' }}
-                value={milestoneDesc}
-                onChange={(e) => setMilestoneDesc(e.target.value)}
-              />
-              <button type="submit" disabled={postingMilestone} className="btn-primary flex-center gap-1">
-                <Plus size={16} /> {postingMilestone ? 'Posting...' : 'Post Update to Public Timeline'}
-              </button>
-            </form>
+            )}
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Integrations</h2>
+            <div className="glass-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--accent-indigo), var(--accent-violet))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <GitBranch size={16} color="#fff" />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>GitHub Repository</h3>
+              </div>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>Link your repository to display a live commit feed on your project page.</p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <input 
+                  type="url" 
+                  placeholder="https://github.com/username/repo" 
+                  className="search-field" 
+                  style={{ flex: 1, minWidth: '200px' }}
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                />
+                <button 
+                  className="btn-glow" 
+                  onClick={handleSaveGithub}
+                  disabled={savingGithub || githubUrl === project.github_url}
+                  style={{ padding: '10px 24px' }}
+                >
+                  {savingGithub ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
           </div>
 
-          <h3 className="mb-2" style={{ fontSize: '1.1rem' }}>Past Milestones</h3>
-          {milestones.length === 0 ? (
-            <div className="p-3 text-center text-muted">
-              No milestones posted yet.
+          <div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>BuildTrack</h2>
+            
+            <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>Post New Milestone</h3>
+              <form onSubmit={handlePostMilestone} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <input 
+                  type="text" 
+                  required 
+                  className="search-field" 
+                  placeholder="Milestone Title (e.g. Database Designed)"
+                  value={milestoneTitle}
+                  onChange={(e) => setMilestoneTitle(e.target.value)}
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+                  <input 
+                    type="date" 
+                    className="search-field" 
+                    style={{ colorScheme: 'dark' }}
+                    value={milestoneDue}
+                    onChange={(e) => setMilestoneDue(e.target.value)}
+                  />
+                  <select 
+                    className="search-field" 
+                    style={{ appearance: 'none' }}
+                    value={milestoneAssigned}
+                    onChange={(e) => setMilestoneAssigned(e.target.value)}
+                  >
+                    <option value="">Assign to (Optional)</option>
+                    <option value={project.founder_id}>Myself (Founder)</option>
+                    {applications.filter(a => a.status === 'Accepted').map(a => {
+                      const applicant = Array.isArray(a.users) ? a.users[0] : a.users;
+                      return (
+                        <option key={a.applicant_id} value={a.applicant_id}>
+                          {applicant?.full_name || 'Anonymous'}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <textarea 
+                  required 
+                  className="search-field" 
+                  placeholder="What is the goal of this milestone?"
+                  style={{ minHeight: '100px', resize: 'vertical' }}
+                  value={milestoneDesc}
+                  onChange={(e) => setMilestoneDesc(e.target.value)}
+                />
+                <button type="submit" disabled={postingMilestone} className="btn-glow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}>
+                  <Plus size={16} /> {postingMilestone ? 'Posting...' : 'Post Update to Timeline'}
+                </button>
+              </form>
             </div>
-          ) : (
-            <div className="flex-col gap-2">
-              {milestones.map(m => {
-                let details: any = { desc: m.description, due: '', assigned: '', completed: false };
-                try {
-                  const parsed = JSON.parse(m.description);
-                  if (parsed.desc !== undefined) details = parsed;
-                } catch (e) {}
 
-                let assignedName = '';
-                if (details.assigned) {
-                  if (details.assigned === project.founder_id) assignedName = 'Founder';
-                  else {
-                    const assignedApp = applications.find(a => a.applicant_id === details.assigned);
-                    const appUser = assignedApp ? (Array.isArray(assignedApp.users) ? assignedApp.users[0] : assignedApp.users) : null;
-                    assignedName = appUser?.full_name || 'Team Member';
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px' }}>Past Milestones</h3>
+            {milestones.length === 0 ? (
+              <div className="glass-card" style={{ padding: '24px', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-secondary)' }}>No milestones posted yet.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {milestones.map(m => {
+                  let details: any = { desc: m.description, due: '', assigned: '', completed: false, completed_at: '' };
+                  try {
+                    const parsed = JSON.parse(m.description);
+                    if (parsed.desc !== undefined) details = { ...details, ...parsed };
+                  } catch (e) {}
+
+                  const isOverdue = !details.completed && details.due && new Date(details.due) < new Date(new Date().setHours(0,0,0,0));
+
+                  let assignedName = '';
+                  if (details.assigned) {
+                    if (details.assigned === project.founder_id) assignedName = 'Founder';
+                    else {
+                      const assignedApp = applications.find(a => a.applicant_id === details.assigned);
+                      const appUser = assignedApp ? (Array.isArray(assignedApp.users) ? assignedApp.users[0] : assignedApp.users) : null;
+                      assignedName = appUser?.full_name || 'Team Member';
+                    }
                   }
-                }
 
-                return (
-                  <div key={m.id} className="glass-panel p-3">
-                    <div className="flex-between mb-1">
-                      <h4 className="mb-0" style={{ fontSize: '1.1rem' }}>{m.title}</h4>
-                      <div className="text-sm text-muted">
-                        Added {new Date(m.created_at).toLocaleDateString()}
+                  return (
+                    <div key={m.id} className="glass-card" style={{ padding: '20px', borderColor: details.completed ? 'rgba(16, 185, 129, 0.3)' : isOverdue ? 'rgba(248, 113, 113, 0.3)' : undefined }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                        <h4 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{m.title}</h4>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          Added {new Date(m.created_at).toLocaleDateString()}
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-muted mb-2" style={{ fontSize: '0.95rem' }}>{details.desc}</p>
-                    
-                    {(details.due || assignedName || details.completed) && (
-                      <div className="flex-center gap-2 text-sm text-muted pt-2" style={{ borderTop: '1px solid var(--border-color)', justifyContent: 'flex-start' }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6, margin: '0 0 16px 0' }}>{details.desc}</p>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', borderTop: '1px solid rgba(99,102,241,0.1)', paddingTop: '16px' }}>
                         {details.due && (
-                          <div className="flex-center gap-1">
-                            <Clock size={14} color="#F59E0B" /> Due: {new Date(details.due).toLocaleDateString()}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isOverdue ? '#f87171' : undefined }}>
+                            <Clock size={14} color={isOverdue ? '#f87171' : '#F59E0B'} /> Due: {new Date(details.due).toLocaleDateString()}
                           </div>
                         )}
                         {assignedName && (
-                          <div className="flex-center gap-1">
-                            <Check size={14} color="#10B981" /> Assigned to: {assignedName}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Check size={14} color="var(--accent-emerald)" /> Assigned to: {assignedName}
                           </div>
                         )}
+                        {isOverdue && <span style={{ color: '#f87171', fontWeight: 700 }}>⚠️ Overdue</span>}
+                        
                         <div style={{ marginLeft: 'auto' }}>
                           {details.completed ? (
-                            <span className="flex-center gap-1 text-bold" style={{ color: '#10B981' }}>
-                              <Check size={14} /> Completed
+                            <span style={{ 
+                              display: 'inline-flex', alignItems: 'center', gap: '4px', 
+                              background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-emerald)', 
+                              padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(16, 185, 129, 0.2)' 
+                            }}>
+                              ✓ Completed {details.completed_at && `on ${new Date(details.completed_at).toLocaleDateString()}`}
                             </span>
                           ) : (
                             <button 
                               onClick={() => handleCompleteMilestone(m.id, m.description)}
-                              className="btn-secondary text-sm" 
-                              style={{ padding: '4px 12px' }}
+                              className="btn-ghost" 
+                              style={{ padding: '6px 14px', fontSize: '0.8rem', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--accent-emerald)' }}
                             >
                               Mark Complete
                             </button>
                           )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          
+          <div style={{ marginTop: '24px' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f87171', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertTriangle size={20} /> Danger Zone
+            </h2>
+            <div className="glass-card" style={{ padding: '24px', border: '1px solid rgba(248, 113, 113, 0.3)', background: 'rgba(248, 113, 113, 0.05)' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>Delete Project</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+                Once you delete a project, there is no going back. This will remove all applications, milestones, and data associated with this project.
+              </p>
+              <button 
+                onClick={handleDeleteProject}
+                disabled={deleting}
+                className="btn-ghost" 
+                style={{ 
+                  padding: '10px 24px', 
+                  color: '#f87171', 
+                  border: '1px solid rgba(248, 113, 113, 0.4)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  background: 'rgba(248, 113, 113, 0.1)'
+                }}
+              >
+                <Trash2 size={16} /> {deleting ? 'Deleting...' : 'Delete Project'}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
       </div>
