@@ -1,50 +1,53 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Code, Rocket, Users as UsersIcon } from 'lucide-react';
+import { Search, Code, Rocket, Users as UsersIcon, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProjectCard from '../components/ProjectCard';
 import { useAuth } from '../components/AuthProvider';
 import { useRouter } from 'next/navigation';
 
 const HeroSection = ({ onExplore, onHowItWorks }: { onExplore: () => void, onHowItWorks: () => void }) => (
-  <section className="hero animate-fade-in delay-1 mb-4">
-    <h1 style={{ fontSize: '4.5rem', marginBottom: '20px' }}>Find your people.<br />Build real things.</h1>
-    <p className="text-muted text-center" style={{ maxWidth: '600px', margin: '0 auto 32px auto', fontSize: '1.2rem', lineHeight: 1.6 }}>
-      Join over thousands of students bridging the gap between ideas and execution. 
+  <section className="hero animate-fade-in delay-1" style={{ minHeight: '55vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="badge badge-indigo" style={{ marginBottom: '20px', fontSize: '0.8rem', padding: '6px 16px' }}>
+      <Sparkles size={14} /> Campus Collaboration Platform
+    </div>
+    <h1>Find your people.<br />Build real things.</h1>
+    <p>
+      Join over thousands of students bridging the gap between ideas and execution.
       Stop losing potential teammates to chaotic group chats. Build your portfolio today.
     </p>
     <div className="hero-actions">
-      <button className="btn-primary" onClick={onExplore}>Explore Projects</button>
-      <button className="btn-secondary" onClick={onHowItWorks}>How it works</button>
+      <button className="btn-glow" onClick={onExplore} style={{ padding: '14px 36px', fontSize: '1rem' }}>Explore Projects</button>
+      <button className="btn-ghost" onClick={onHowItWorks} style={{ padding: '14px 36px', fontSize: '1rem' }}>How it works</button>
     </div>
   </section>
 );
 
 const HowItWorksSection = () => (
-  <section id="how-it-works" className="animate-fade-in delay-2" style={{ marginBottom: '80px', scrollMarginTop: '100px' }}>
-    <h2 className="text-center mb-4" style={{ fontSize: '2rem' }}>How ProjectHub Works</h2>
-    <div className="grid-auto">
-      <div className="glass-panel p-4 text-center">
-        <div className="flex-center mb-3" style={{ background: 'var(--bg-surface-hover)', width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto', color: 'var(--accent-primary)' }}>
-          <Rocket size={32} />
+  <section id="how-it-works" className="animate-fade-in delay-2" style={{ marginBottom: '60px', scrollMarginTop: '100px' }}>
+    <h2 className="section-title text-center mb-4">How ProjectHub Works</h2>
+    <div className="grid-auto" style={{ maxWidth: '900px', margin: '0 auto' }}>
+      <div className="step-card">
+        <div className="step-icon" style={{ background: 'rgba(99, 102, 241, 0.12)', color: 'var(--accent-indigo)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+          <Rocket size={28} />
         </div>
-        <h3 className="mb-2" style={{ fontSize: '1.25rem' }}>1. Post an Idea</h3>
-        <p className="text-muted text-sm">Got a vision? Publish your project on the IdeaBoard and outline the exact skills you need to make it happen.</p>
+        <h3>1. Post an Idea</h3>
+        <p>Got a vision? Publish your project on the IdeaBoard and outline the exact skills you need to make it happen.</p>
       </div>
-      <div className="glass-panel p-4 text-center">
-        <div className="flex-center mb-3" style={{ background: 'var(--bg-surface-hover)', width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto', color: 'var(--accent-primary)' }}>
-          <Search size={32} />
+      <div className="step-card">
+        <div className="step-icon" style={{ background: 'rgba(139, 92, 246, 0.12)', color: 'var(--accent-violet)', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+          <Search size={28} />
         </div>
-        <h3 className="mb-2" style={{ fontSize: '1.25rem' }}>2. Find a Match</h3>
-        <p className="text-muted text-sm">Our SkillMatch engine instantly highlights projects that perfectly align with your technical stack and interests.</p>
+        <h3>2. Find a Match</h3>
+        <p>Our SkillMatch engine instantly highlights projects that perfectly align with your technical stack and interests.</p>
       </div>
-      <div className="glass-panel p-4 text-center">
-        <div className="flex-center mb-3" style={{ background: 'var(--bg-surface-hover)', width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto', color: 'var(--accent-primary)' }}>
-          <UsersIcon size={32} />
+      <div className="step-card">
+        <div className="step-icon" style={{ background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-emerald)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+          <UsersIcon size={28} />
         </div>
-        <h3 className="mb-2" style={{ fontSize: '1.25rem' }}>3. Form a Team</h3>
-        <p className="text-muted text-sm">Apply with a quick pitch, get accepted by the founder, and start building real-world experience for your resume.</p>
+        <h3>3. Form a Team</h3>
+        <p>Apply with a quick pitch, get accepted by the founder, and start building real-world experience for your resume.</p>
       </div>
     </div>
   </section>
@@ -171,7 +174,7 @@ export default function Home() {
       <HowItWorksSection />
 
       <section id="ideaboard" className="animate-fade-in delay-3" style={{ scrollMarginTop: '100px' }}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>The IdeaBoard</h2>
+        <h2 className="section-title mb-4">The IdeaBoard</h2>
         <div className="filters-bar">
           <div className="search-input-wrapper">
             <Search className="search-icon" size={18} />
@@ -179,7 +182,7 @@ export default function Home() {
               type="text" 
               placeholder="Search by project name or skills..." 
               className="search-input"
-              style={{ paddingLeft: '48px' }}
+              style={{ paddingLeft: '44px' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -198,7 +201,7 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+          <div className="glass-card p-4 text-center" style={{ color: 'var(--text-secondary)' }}>
             Loading projects...
           </div>
         ) : (
@@ -210,38 +213,38 @@ export default function Home() {
         )}
         
         {!loading && filteredProjects.length === 0 && (
-          <div className="glass-panel p-4 flex-col flex-center text-center mt-4">
-            <div className="flex-center mb-3" style={{ background: 'var(--bg-surface-hover)', width: '80px', height: '80px', borderRadius: '50%', color: 'var(--text-secondary)' }}>
-              <Code size={40} />
+          <div className="glass-card p-4 flex-col flex-center text-center mt-4" style={{ gap: '16px' }}>
+            <div className="flex-center" style={{ background: 'rgba(99,102,241,0.1)', width: '80px', height: '80px', borderRadius: '20px', color: 'var(--accent-indigo)' }}>
+              <Code size={36} />
             </div>
             
             {projects.length === 0 ? (
               <>
-                <h3 className="mb-2" style={{ color: 'var(--text-primary)', fontSize: '1.5rem' }}>No projects available</h3>
-                <p className="text-muted mb-4" style={{ maxWidth: '400px' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 700 }}>No projects available</h3>
+                <p className="text-muted" style={{ maxWidth: '400px', lineHeight: 1.6 }}>
                   {userRole === 'admin' || userRole === 'faculty' 
                     ? "It looks like the IdeaBoard is currently empty. Students haven't posted any projects yet."
                     : "It looks like the IdeaBoard is currently empty. Be the pioneer on your campus and kickstart the very first project!"}
                 </p>
                 {user ? (
                   userRole !== 'admin' && userRole !== 'faculty' && (
-                    <button className="btn-primary" onClick={() => router.push('/post')}>
+                    <button className="btn-glow" onClick={() => router.push('/post')}>
                       Post the First Project
                     </button>
                   )
                 ) : (
-                  <button className="btn-primary" onClick={handleLogin}>
+                  <button className="btn-glow" onClick={handleLogin}>
                     Log in to Post a Project
                   </button>
                 )}
               </>
             ) : (
               <>
-                <h3 className="mb-2" style={{ color: 'var(--text-primary)', fontSize: '1.5rem' }}>No matches found</h3>
-                <p className="text-muted mb-4" style={{ maxWidth: '400px' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 700 }}>No matches found</h3>
+                <p className="text-muted" style={{ maxWidth: '400px', lineHeight: 1.6 }}>
                   We couldn't find any projects matching your current filters or search query. Try adjusting them to see more results!
                 </p>
-                <button className="btn-secondary" onClick={() => { setSearchQuery(""); setActiveFilter("All"); }}>
+                <button className="btn-ghost" onClick={() => { setSearchQuery(""); setActiveFilter("All"); }}>
                   Clear Filters
                 </button>
               </>

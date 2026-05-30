@@ -17,6 +17,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <div id="bg-aurora">
+          <div className="orb"></div>
+          <div className="orb"></div>
+          <div className="orb"></div>
+          <div className="orb"></div>
+        </div>
+        <div className="grid-overlay"></div>
         <AuthProvider>
           <div className="app-container">
             <Navbar />

@@ -57,37 +57,38 @@ export default function Navbar() {
 
   const closeMenu = () => setIsMobileMenuOpen(false);
 
+  const isActive = (path: string) => pathname === path ? 'nav-link active' : 'nav-link';
+
   return (
     <nav className="navbar">
       <Link href="/" className="nav-brand" onClick={closeMenu}>
         <div className="brand-icon">
-          <Zap size={20} />
+          <Zap size={18} />
         </div>
         ProjectHub
       </Link>
 
-      
       <button className="mobile-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
 
       <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-        <Link href="/" className="nav-link" onClick={closeMenu}>IdeaBoard</Link>
+        <Link href="/" className={isActive('/')} onClick={closeMenu}>IdeaBoard</Link>
         {user && (
           <>
             {userRole === 'admin' && (
-              <Link href="/admin" className="nav-link" onClick={closeMenu}>
+              <Link href="/admin" className={isActive('/admin')} onClick={closeMenu}>
                 Admin
               </Link>
             )}
             {userRole === 'faculty' && (
-              <Link href="/faculty" className="nav-link" onClick={closeMenu}>
-                Faculty Dashboard
+              <Link href="/faculty" className={isActive('/faculty')} onClick={closeMenu}>
+                Faculty
               </Link>
             )}
             {(userRole !== 'admin' && userRole !== 'faculty') && (
               <>
-                <Link href="/dashboard" className="nav-link" onClick={closeMenu} style={{ position: 'relative' }}>
+                <Link href="/dashboard" className={isActive('/dashboard')} onClick={closeMenu} style={{ position: 'relative' }}>
                   Dashboard
                   {pendingCount > 0 && (
                     <span className="badge-notification">
@@ -95,10 +96,10 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
-                <Link href="/chat" className="nav-link" onClick={closeMenu}>
+                <Link href="/chat" className={isActive('/chat')} onClick={closeMenu}>
                   Chat
                 </Link>
-                <Link href="/profile" className="nav-link" onClick={closeMenu}>Profile</Link>
+                <Link href="/profile" className={isActive('/profile')} onClick={closeMenu}>Profile</Link>
               </>
             )}
           </>
@@ -107,14 +108,14 @@ export default function Navbar() {
           <div className="nav-actions">
             {(userRole !== 'admin' && userRole !== 'faculty') && (
               <Link href="/post" onClick={closeMenu} style={{ width: '100%' }}>
-                <button className="btn-primary" style={{ width: '100%', whiteSpace: 'nowrap' }}>Post Project</button>
+                <button className="btn-glow" style={{ width: '100%', whiteSpace: 'nowrap' }}>Post Project</button>
               </Link>
             )}
-            <button className="btn-secondary" onClick={handleLogout} style={{ width: '100%', whiteSpace: 'nowrap' }}>Log Out</button>
+            <button className="btn-ghost" onClick={handleLogout} style={{ width: '100%', whiteSpace: 'nowrap' }}>Log Out</button>
           </div>
         ) : (
           <Link href="/login" onClick={closeMenu} style={{ width: '100%' }}>
-            <button className="btn-primary" style={{ width: '100%', whiteSpace: 'nowrap' }}>Log In</button>
+            <button className="btn-glow" style={{ width: '100%', whiteSpace: 'nowrap' }}>Log In</button>
           </Link>
         )}
       </div>
